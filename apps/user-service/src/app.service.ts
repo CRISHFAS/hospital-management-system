@@ -1,3 +1,4 @@
+// apps/user-service/src/app.service.ts
 import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,10 +36,10 @@ export class AppService {
         data,
         message: 'User created successfully'
       };
-    } catch (error) {
+    } catch (error: any) {  // ← Fix aquí
       return {
         status: 'error',
-        message: error.message
+        message: error?.message || 'Unknown error occurred'
       };
     }
   }

@@ -1,6 +1,9 @@
+// apps/user-service/src/app.controller.ts
 import { Controller, Get, Post, Body } from '@nestjs/common';
+// import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';  // ← Comentar
 import { AppService } from './app.service';
 
+// @ApiTags('users')  // ← Comentar
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
