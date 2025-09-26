@@ -8,7 +8,7 @@ async function bootstrap() {
   // Enable CORS para el dominio de Vercel
   app.enableCors({
     origin: [
-      'https://hospital-management-system-one-navy.vercel.app',
+      'https://hospital-management-system-av8nrtqre-crishfas-projects.vercel.app',
       'http://localhost:3000',
       'https://localhost:3000'
     ],
