@@ -1,17 +1,26 @@
+// apps/user-service/src/main.ts y apps/patient-service/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Enable CORS
-  app.enableCors();
+  // Enable CORS para el dominio de Vercel
+  app.enableCors({
+    origin: [
+      'https://hospital-management-system-one-navy.vercel.app',
+      'http://localhost:3000',
+      'https://localhost:3000'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  });
   
-  // Get port from environment or default to 10000
   const port = process.env.PORT || 10000;
   
   await app.listen(port);
-  console.log(`🚀 HMS User Service running on port ${port}`);
+  console.log(`🏥 HMS Service running on port ${port}`);
 }
 
 bootstrap();
