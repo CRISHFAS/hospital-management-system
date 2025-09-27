@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -13,10 +13,12 @@ export class AppController {
       status: 'running',
       endpoints: {
         'GET /health': 'Health check',
+        'GET /patients': 'List all patients',
         'POST /patients': 'Create patient',
         'GET /patients/:id': 'Get patient by ID',
         'PUT /patients/:id': 'Update patient',
         'POST /appointments': 'Create appointment',
+        'GET /appointments': 'List all appointments',
         'GET /patients/:id/appointments': 'Get patient appointments'
       }
     };
@@ -29,6 +31,12 @@ export class AppController {
       timestamp: new Date().toISOString(),
       service: 'HMS Patient Service'
     };
+  }
+
+  // NUEVO: Listar todos los pacientes
+  @Get('patients')
+  getAllPatients(@Query('search') search?: string) {
+    return this.appService.getAllPatients(search);
   }
 
   @Post('patients')
@@ -44,6 +52,12 @@ export class AppController {
   @Put('patients/:id')
   updatePatient(@Param('id') id: string, @Body() updateData: any) {
     return this.appService.updatePatient(id, updateData);
+  }
+
+  // NUEVO: Listar todas las citas
+  @Get('appointments')
+  getAllAppointments() {
+    return this.appService.getAllAppointments();
   }
 
   @Post('appointments')

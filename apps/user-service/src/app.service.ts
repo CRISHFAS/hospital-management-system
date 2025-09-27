@@ -1,4 +1,3 @@
-// apps/user-service/src/app.service.ts
 import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
@@ -10,7 +9,7 @@ export class AppService {
   );
 
   getHello(): string {
-    return '🏥 HMS User Service - Hospital Management System API';
+    return 'HMS User Service - Hospital Management System API';
   }
 
   async createUser(userData: any) {
@@ -36,10 +35,58 @@ export class AppService {
         data,
         message: 'User created successfully'
       };
-    } catch (error: any) {  // ← Fix aquí
+    } catch (error: any) {
       return {
         status: 'error',
         message: error?.message || 'Unknown error occurred'
+      };
+    }
+  }
+
+  // NUEVO: Obtener todos los usuarios
+  async getAllUsers() {
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return {
+        status: 'success',
+        data,
+        count: data.length,
+        message: 'Users retrieved successfully'
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error?.message || 'Failed to retrieve users'
+      };
+    }
+  }
+
+  // NUEVO: Obtener usuario por ID
+  async getUser(id: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        status: 'success',
+        data,
+        message: 'User retrieved successfully'
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error?.message || 'User not found'
       };
     }
   }

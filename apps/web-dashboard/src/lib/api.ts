@@ -16,6 +16,17 @@ export class ApiClient {
     }
   }
 
+  // NUEVO: Obtener todos los usuarios
+  static async getAllUsers() {
+    try {
+      const response = await fetch(`${USER_SERVICE_URL}/users`);
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  }
+
   static async createPatient(patientData: any) {
     try {
       const response = await fetch(`${PATIENT_SERVICE_URL}/patients`, {
@@ -26,6 +37,31 @@ export class ApiClient {
       return response.json();
     } catch (error) {
       console.error('Error creating patient:', error);
+      throw error;
+    }
+  }
+
+  // NUEVO: Obtener todos los pacientes
+  static async getAllPatients(search?: string) {
+    try {
+      const url = new URL(`${PATIENT_SERVICE_URL}/patients`);
+      if (search) url.searchParams.append('search', search);
+      
+      const response = await fetch(url.toString());
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      throw error;
+    }
+  }
+
+  // NUEVO: Obtener todas las citas
+  static async getAllAppointments() {
+    try {
+      const response = await fetch(`${PATIENT_SERVICE_URL}/appointments`);
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
       throw error;
     }
   }

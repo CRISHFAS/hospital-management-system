@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+
 const { v4: uuidv4 } = require('uuid');
 
 @Injectable()
@@ -9,9 +10,88 @@ export class AppService {
     process.env.SUPABASE_ANON_KEY!
   );
 
+  // NUEVO: Obtener todos los pacientes
+  async getAllPatients(search?: string) {
+    try {
+      let query = this.supabase
+        .from('patients')
+        .select(`
+          *,
+          users:user_id (
+            id,
+            email,
+            first_name,
+            last_name,
+            created_at
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (search) {
+        query = query.or(`users.first_name.ilike.%${search}%,users.last_name.ilike.%${search}%,users.email.ilike.%${search}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return {
+        status: 'success',
+        data,
+        count: data.length,
+        message: 'Patients retrieved successfully'
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error?.message || 'Failed to retrieve patients'
+      };
+    }
+  }
+
+  // NUEVO: Obtener todas las citas
+  async getAllAppointments() {
+    try {
+      const { data, error } = await this.supabase
+        .from('appointments')
+        .select(`
+          *,
+          patient:patient_id (
+            id,
+            medical_record_number,
+            users:user_id (
+              first_name,
+              last_name,
+              email
+            )
+          ),
+          doctor:doctor_id (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .order('appointment_date', { ascending: true });
+
+      if (error) throw error;
+
+      return {
+        status: 'success',
+        data,
+        count: data.length,
+        message: 'Appointments retrieved successfully'
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error?.message || 'Failed to retrieve appointments'
+      };
+    }
+  }
+
+  // Mantener métodos existentes...
   async createPatient(patientData: any) {
     try {
-      // Crear entrada en la tabla users primero
       const { data: userData, error: userError } = await this.supabase
         .from('users')
         .insert({
@@ -26,7 +106,6 @@ export class AppService {
 
       if (userError) throw userError;
 
-      // Crear entrada específica de paciente
       const { data: patientRecord, error: patientError } = await this.supabase
         .from('patients')
         .insert({
