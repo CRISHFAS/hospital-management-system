@@ -237,10 +237,190 @@ function ServiceCard({ name, status, endpoints }: any) {
 }
 
 function UsersTab() {
+  const { hasRole } = useAuth();
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const result = await ApiClient.getAllUsers();
+      if (result.status === 'success') {
+        setUsers(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const userData = {
+      email: formData.get('email'),
+      password: formData.get('password'), // NUEVO
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      role: formData.get('role')
+    };
+
+    try {
+      const result = await ApiClient.register(userData); // Usar register en vez de createUser
+      if (result.status === 'success') {
+        alert('Usuario creado exitosamente');
+        setShowForm(false);
+        (e.target as HTMLFormElement).reset();
+        loadUsers();
+      } else {
+        alert('Error: ' + result.message);
+      }
+    } catch (error) {
+      alert('Error de conexión');
+    }
+    
+    setLoading(false);
+  };
+
+  if (!hasRole(['admin', 'receptionist'])) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-500">No tienes permisos para acceder a esta sección.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Gestión de Usuarios</h2>
-      <p className="text-gray-600">Sección de usuarios disponible solo para administradores y recepcionistas.</p>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Gestión de Usuarios</h2>
+        {hasRole(['admin']) && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            {showForm ? 'Cancelar' : 'Nuevo Usuario'}
+          </button>
+        )}
+      </div>
+
+      {showForm && hasRole(['admin']) && (
+        <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-lg mb-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                name="email"
+                required
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Contraseña</label>
+              <input
+                type="password"
+                name="password"
+                required
+                minLength={6}
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Nombre</label>
+              <input
+                type="text"
+                name="firstName"
+                required
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Apellido</label>
+              <input
+                type="text"
+                name="lastName"
+                required
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium mb-2">Rol</label>
+              <select name="role" required className="w-full p-2 border rounded-md">
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Enfermero/a</option>
+                <option value="receptionist">Recepcionista</option>
+                <option value="lab_technician">Técnico de Laboratorio</option>
+                <option value="pharmacist">Farmacéutico</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Creando...' : 'Crear Usuario'}
+          </button>
+        </form>
+      )}
+
+      {/* Lista de usuarios */}
+      <div className="bg-white border rounded-lg">
+        <div className="px-6 py-4 border-b">
+          <h3 className="text-lg font-medium">Lista de Usuarios</h3>
+        </div>
+        <div className="overflow-x-auto">
+          {loadingUsers ? (
+            <div className="p-4 text-center">Cargando usuarios...</div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user: any) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.first_name} {user.last_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.is_active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
